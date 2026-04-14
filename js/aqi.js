@@ -4,6 +4,7 @@
  */
 const _aqiDB = {
   panvel: { aqi: 102, city: 'Panvel, Maharashtra' },
+  nerul: { aqi: 101, city: 'Nerul, Maharashtra' },
   delhi: { aqi: 185, city: 'Delhi NCR' },
   mumbai: { aqi: 72, city: 'Mumbai' },
   bangalore: { aqi: 55, city: 'Bengaluru' },
@@ -25,7 +26,7 @@ function getAQIForLocation(city) {
 }
 
 function getAQICategory(value) {
-  if (value <= 50)  return { label: 'Good', color: '#10B981', advice: 'Air quality is satisfactory, and air pollution poses little or no risk.' };
+  if (value <= 50) return { label: 'Good', color: '#10B981', advice: 'Air quality is satisfactory, and air pollution poses little or no risk.' };
   if (value <= 100) return { label: 'Moderate', color: '#F59E0B', advice: 'Air quality is acceptable. However, there may be a risk for some people.' };
   if (value <= 150) return { label: 'Poor', color: '#EA580C', advice: 'People with respiratory issues should limit outdoor activity. Use a mask.' };
   if (value <= 200) return { label: 'Unhealthy', color: '#EF4444', advice: 'Everyone may begin to experience health effects. Avoid prolonged outdoor exertion.' };
