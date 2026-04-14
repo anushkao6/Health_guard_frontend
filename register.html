@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register — HealthBot AI</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script src="/js/theme.js"></script>
+    <style>
+      body {
+        background: radial-gradient(circle at top right, rgba(13, 148, 136, 0.05), transparent),
+                    radial-gradient(circle at bottom left, rgba(56, 189, 248, 0.05), transparent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .auth-card {
+        width: 100%;
+        max-width: 480px;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(226, 232, 240, 0.5);
+      }
+      [data-theme="dark"] .auth-card {
+        background: rgba(30, 41, 59, 0.8);
+        border-color: rgba(51, 65, 85, 0.6);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card auth-card" style="padding: 2.5rem;">
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <a href="/index.html" class="brand" style="justify-content: center; font-size: 1.75rem; margin-bottom: 0.5rem;">HealthBot <span>AI</span></a>
+        <p class="text-secondary" style="font-size: 0.95rem;">Join a community focused on health awareness.</p>
+      </div>
+
+      <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; text-align: center;">Create Account</h2>
+      <p class="text-muted text-center mb-2" style="font-size: 0.9rem;">Sign up to track your health and use the AI assistant.</p>
+
+      <form class="ap-form" id="register-form">
+        <div class="form-group">
+          <label style="font-weight:600; font-size:0.85rem; color:var(--text-secondary); display:block; margin-bottom:0.4rem;">Full Name</label>
+          <input type="text" id="fullName" required placeholder="John Doe" style="width:100%; padding:0.75rem 1rem; border-radius:var(--radius-md); border:1.5px solid var(--border-color); background:var(--bg-main); font-size:0.95rem; color:var(--text-primary);" />
+        </div>
+        <div class="form-group">
+          <label style="font-weight:600; font-size:0.85rem; color:var(--text-secondary); display:block; margin-bottom:0.4rem;">Email Address</label>
+          <input type="email" id="email" required placeholder="name@example.com" style="width:100%; padding:0.75rem 1rem; border-radius:var(--radius-md); border:1.5px solid var(--border-color); background:var(--bg-main); font-size:0.95rem; color:var(--text-primary);" />
+        </div>
+        <div class="form-group">
+          <label style="font-weight:600; font-size:0.85rem; color:var(--text-secondary); display:block; margin-bottom:0.4rem;">Password</label>
+          <input type="password" id="password" required placeholder="••••••••" style="width:100%; padding:0.75rem 1rem; border-radius:var(--radius-md); border:1.5px solid var(--border-color); background:var(--bg-main); font-size:0.95rem; color:var(--text-primary);" />
+        </div>
+        
+        <p id="error-msg" class="text-danger" style="font-size: 0.85rem; margin-top: -0.5rem; margin-bottom: 1rem; display: none; color: var(--color-danger); font-weight: 600;"></p>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem; padding: 0.85rem;">Create My Account</button>
+      </form>
+
+      <div style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+        Already have an account? <a href="/login.html" style="font-weight: 700;">Sign in</a>
+      </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/api.js"></script>
+    <script>
+      document.getElementById("register-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const fullName = document.getElementById("fullName").value;
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const errEl = document.getElementById("error-msg");
+        errEl.style.display = "none";
+
+        try {
+          const res = await hgFetch("/auth/register", {
+            method: "POST",
+            body: { fullName, email, password }
+          });
+          hgLogin(res.token, res.fullName, res.role);
+          window.location.href = "/dashboard.html";
+        } catch (err) {
+          errEl.textContent = err.message;
+          errEl.style.display = "block";
+        }
+      });
+    </script>
+  </body>
+</html>

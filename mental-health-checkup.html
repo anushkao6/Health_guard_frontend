@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mental Health Checkup — HealthBot AI</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+  <style>
+    .question-card {
+      background: var(--bg-surface);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      transition: var(--transition);
+    }
+
+    .question-card:hover {
+      border-color: var(--color-primary-light);
+    }
+
+    .question-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      color: var(--text-main);
+    }
+
+    .options-grid {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .option-label {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+    }
+
+    .option-label:hover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-light);
+    }
+
+    .option-label input {
+      margin-right: 0.75rem;
+      cursor: pointer;
+      accent-color: var(--color-primary);
+    }
+
+    .option-label.selected {
+      background: var(--color-primary-light);
+      border-color: var(--color-primary);
+      color: var(--color-primary-dark);
+      font-weight: 500;
+    }
+
+    .result-banner {
+      padding: 2.5rem;
+      border-radius: var(--radius-lg);
+      text-align: center;
+      margin-top: 3rem;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .result-score {
+      font-size: 3rem;
+      font-weight: 800;
+      margin: 0.5rem 0;
+    }
+
+    .result-label {
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tips-container {
+      margin-top: 3rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .tip-card {
+      padding: 1.5rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      display: flex;
+      gap: 1rem;
+    }
+
+    .tip-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .disclaimer-box {
+      margin-top: 4rem;
+      padding: 1.5rem;
+      border: 1px solid #fee2e2;
+      background: #fffafa;
+      border-radius: var(--radius-md);
+      color: #991b1b;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    [data-theme='dark'] .disclaimer-box {
+      background: #2a1a1a;
+      border-color: #4a2a2a;
+      color: #fecaca;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site-header" id="site-header"></header>
+
+  <div class="container" style="max-width: 800px; padding-bottom: 5rem;">
+    <div style="margin-bottom: 3rem; text-align: center;">
+      <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Mental Health <span
+          style="color:var(--color-primary)">Checkup</span></h1>
+      <p class="text-secondary" style="max-width: 600px; margin: 0 auto;">A broad assessment tool to help you understand
+        your overall mental wellness, covering mood, stress, energy, and focus.</p>
+    </div>
+
+    <div id="quiz-container">
+      <!-- Mood -->
+      <div class="question-card" data-q="1">
+        <div class="question-text">1. Over the last 2 weeks, how often have you felt down, depressed, or hopeless?</div>
+        <div class="options-grid">
+          <label class="option-label"><input type="radio" name="q1" value="0"> Not at all</label>
+          <label class="option-label"><input type="radio" name="q1" value="1"> Several days</label>
+          <label class="option-label"><input type="radio" name="q1" value="2"> More than half the days</label>
+          <label class="option-label"><input type="radio" name="q1" value="3"> Nearly every day</label>
+        </div>
+      </div>
+
+      <!-- Stress/Worry -->
+      <div class="question-card" data-q="2">
+        <div class="question-text">2. How often have you been unable to stop or control worrying or felt overwhelmed by
+          stress?</div>
+        <div class="options-grid">
+          <label class="option-label"><input type="radio" name="q2" value="0"> Not at all</label>
+          <label class="option-label"><input type="radio" name="q2" value="1"> Several days</label>
+          <label class="option-label"><input type="radio" name="q2" value="2"> More than half the days</label>
+          <label class="option-label"><input type="radio" name="q2" value="3"> Nearly every day</label>
+        </div>
+      </div>
+
+      <!-- Sleep -->
+      <div class="question-card" data-q="3">
+        <div class="question-text">3. Have you had trouble falling or staying asleep, or sleeping too much?</div>
+        <div class="options-grid">
+          <label class="option-label"><input type="radio" name="q3" value="0"> Not at all</label>
+          <label class="option-label"><input type="radio" name="q3" value="1"> Several days</label>
+          <label class="option-label"><input type="radio" name="q3" value="2"> More than half the days</label>
+          <label class="option-label"><input type="radio" name="q3" value="3"> Nearly every day</label>
+        </div>
+      </div>
+
+      <!-- Energy -->
+      <div class="question-card" data-q="4">
+        <div class="question-text">4. How often have you felt tired, fatigued, or had very little energy?</div>
+        <div class="options-grid">
+          <label class="option-label"><input type="radio" name="q4" value="0"> Not at all</label>
+          <label class="option-label"><input type="radio" name="q4" value="1"> Several days</label>
+          <label class="option-label"><input type="radio" name="q4" value="2"> More than half the days</label>
+          <label class="option-label"><input type="radio" name="q4" value="3"> Nearly every day</label>
+        </div>
+      </div>
+
+      <!-- Concentration -->
+      <div class="question-card" data-q="5">
+        <div class="question-text">5. Have you had trouble concentrating on things, such as work, reading, or watching
+          television?</div>
+        <div class="options-grid">
+          <label class="option-label"><input type="radio" name="q5" value="0"> Not at all</label>
+          <label class="option-label"><input type="radio" name="q5" value="1"> Several days</label>
+          <label class="option-label"><input type="radio" name="q5" value="2"> More than half the days</label>
+          <label class="option-label"><input type="radio" name="q5" value="3"> Nearly every day</label>
+        </div>
+      </div>
+
+      <!-- Interest/Pleasure -->
+      <div class="question-card" data-q="6">
+        <div class="question-text">6. How often have you felt little interest or pleasure in doing things you usually
+          enjoy?</div>
+        <div class="options-grid">
+          <label class="option-label"><input type="radio" name="q6" value="0"> Not at all</label>
+          <label class="option-label"><input type="radio" name="q6" value="1"> Several days</label>
+          <label class="option-label"><input type="radio" name="q6" value="2"> More than half the days</label>
+          <label class="option-label"><input type="radio" name="q6" value="3"> Nearly every day</label>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 3rem;">
+        <button id="btn-submit-quiz" class="btn btn-primary" style="padding: 1rem 3rem; font-size: 1.1rem;">Submit
+          Checkup</button>
+      </div>
+    </div>
+
+    <!-- Result Panel (Hidden initially) -->
+    <div id="result-panel" style="display: none;">
+      <div id="result-banner" class="result-banner">
+        <p style="margin: 0; font-size: 1rem; color: var(--text-secondary);">Indicated Concern Level:</p>
+        <div id="score-val" class="result-score">0</div>
+        <div id="score-label" class="result-label">Low</div>
+        <p id="score-desc" style="margin-top: 1rem; max-width: 500px; margin-left: auto; margin-right: auto;"></p>
+      </div>
+
+      <h3 style="margin-top: 4rem; font-size: 1.5rem; text-align: center;">Wellness & Coping Strategies</h3>
+      <div class="tips-container">
+        <div class="tip-card">
+          <div class="tip-icon">🧘</div>
+          <div>
+            <h4 style="margin-bottom: 0.25rem;">Mindfulness Meditation</h4>
+            <p class="text-muted" style="font-size: 0.9rem;">Spend 5-10 minutes daily focusing on your breath to help
+              ground your thoughts and reduce stress.</p>
+          </div>
+        </div>
+        <div class="tip-card">
+          <div class="tip-icon">💤</div>
+          <div>
+            <h4 style="margin-bottom: 0.25rem;">Sleep Hygiene</h4>
+            <p class="text-muted" style="font-size: 0.9rem;">Maintain a consistent sleep schedule and create a relaxing
+              environment to improve your energy and mood.</p>
+          </div>
+        </div>
+        <div class="tip-card">
+          <div class="tip-icon">🏃</div>
+          <div>
+            <h4 style="margin-bottom: 0.25rem;">Active Movement</h4>
+            <p class="text-muted" style="font-size: 0.9rem;">Physical activity releases endorphins that can naturally
+              boost your mood and focus.</p>
+          </div>
+        </div>
+        <div class="tip-card">
+          <div class="tip-icon">🧠</div>
+          <div>
+            <h4 style="margin-bottom: 0.25rem;">Professional Support</h4>
+            <p class="text-muted" style="font-size: 0.9rem;">If symptoms persist, speaking with a licensed therapist can
+              provide valuable tools for emotional well-being.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 3rem;">
+        <button onclick="window.location.reload()" class="btn btn-outline">Retake Checkup</button>
+      </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="disclaimer-box">
+      <strong>Disclaimer:</strong> This mental health checkup is for informational and educational purposes only. It is
+      NOT a clinical diagnosis or a replacement for professional medical advice. Mental wellness is complex and these
+      results only offer a snapshot. If you are experiencing persistent low mood, overwhelming stress, or thoughts of
+      self-harm, please contact a qualified mental health professional or emergency services immediately.
+    </div>
+  </div>
+
+  <script src="/js/config.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/nav.js"></script>
+  <script>
+    (function () {
+      if (!hgIsLoggedIn()) {
+        window.location.href = "/login.html?next=" + encodeURIComponent(window.location.pathname);
+        return;
+      }
+
+      if (hgIsAdmin()) {
+        window.location.replace("/admin.html");
+        return;
+      }
+
+      hgRenderNav("mh-checkup");
+
+      // Handle Option Selection Styling
+      document.querySelectorAll('.option-label input').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const parent = e.target.closest('.options-grid');
+          parent.querySelectorAll('.option-label').forEach(lbl => lbl.classList.remove('selected'));
+          e.target.parentElement.classList.add('selected');
+        });
+      });
+
+      document.getElementById('btn-submit-quiz').addEventListener('click', () => {
+        const questions = 6;
+        let score = 0;
+        let answered = 0;
+
+        for (let i = 1; i <= questions; i++) {
+          const val = document.querySelector(`input[name="q${i}"]:checked`);
+          if (val) {
+            score += parseInt(val.value);
+            answered++;
+          }
+        }
+
+        if (answered < questions) {
+          alert('Please answer all questions before submitting.');
+          return;
+        }
+
+        // Processing Result
+        document.getElementById('quiz-container').style.display = 'none';
+        document.getElementById('result-panel').style.display = 'block';
+
+        const scoreVal = document.getElementById('score-val');
+        const scoreLabel = document.getElementById('score-label');
+        const scoreDesc = document.getElementById('score-desc');
+        const banner = document.getElementById('result-banner');
+
+        scoreVal.textContent = score;
+
+        let level = "";
+        let color = "";
+        let bg = "";
+        let desc = "";
+
+        if (score <= 4) {
+          level = "Low Concern";
+          color = "var(--color-primary-dark)";
+          bg = "var(--color-primary-light)";
+          desc = "Your results suggest a generally positive state of mental wellness. Continue practicing self-care and mindfulness.";
+        } else if (score <= 9) {
+          level = "Mild Concern";
+          color = "#856404";
+          bg = "#fff3cd";
+          desc = "You may be experiencing some mild emotional challenges. Focusing on sleep, activity, and stress management could be beneficial.";
+        } else if (score <= 14) {
+          level = "Moderate Concern";
+          color = "#856404";
+          bg = "#ffe8a1";
+          desc = "Your indications suggest moderate concerns. It might be a good time to reach out to a trusted friend or a mental health professional for support.";
+        } else {
+          level = "High Concern";
+          color = "#721c24";
+          bg = "#f8d7da";
+          desc = "Your results indicate high concerns. We strongly recommend consulting a healthcare provider or a licensed therapist to discuss these symptoms.";
+        }
+
+        scoreLabel.textContent = level;
+        banner.style.color = color;
+        banner.style.background = bg;
+        scoreDesc.textContent = desc;
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    })();
+  </script>
+</body>
+
+</html>

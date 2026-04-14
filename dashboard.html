@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Health Dashboard — HealthBot AI</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="/js/theme.js"></script>
+  </head>
+  <body>
+    <header class="site-header" id="site-header"></header>
+
+    <div class="container" style="padding: 0;">
+      <!-- Welcome Header -->
+      <div style="margin-bottom: 2.5rem;">
+        <h1 id="welcome-name" style="font-size: 2rem; margin-bottom: 0.5rem;">Welcome, User</h1>
+        <p class="text-secondary" id="welcome-sub">Explore your health activity and community alerts.</p>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-widget">
+          <span class="stat-widget-label">CHAT MESSAGES</span>
+          <span class="stat-widget-value" id="stat-chats">0</span>
+          <span class="stat-widget-trend trend-up">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+            Active conversations
+          </span>
+        </div>
+        <div class="stat-widget">
+          <span class="stat-widget-label">HEALTH ASSESSMENTS</span>
+          <span class="stat-widget-value" id="stat-symptoms">0</span>
+          <span class="stat-widget-trend trend-up">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+            History Overview
+          </span>
+        </div>
+        <div class="stat-widget">
+          <span class="stat-widget-label">MY REGION</span>
+          <span class="stat-widget-value" id="stat-location" style="font-size: 1.25rem;">Global</span>
+          <span class="stat-widget-trend">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            Primary detected area
+          </span>
+        </div>
+      </div>
+
+      <!-- Analytics Row -->
+      <div style="display:grid; grid-template-columns: 1fr 340px; gap:1.5rem; margin-top:2.5rem;">
+        <!-- Chart -->
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+            <h3 style="font-size:1.15rem;">Activity Trends</h3>
+            <select class="btn btn-sm btn-secondary" style="font-size:0.75rem; padding:0.25rem 0.5rem; border-radius:6px;">
+              <option>Last 7 days</option>
+              <option>Last 30 days</option>
+            </select>
+          </div>
+          <div style="height:280px; position:relative;">
+             <canvas id="chart-activity"></canvas>
+          </div>
+        </div>
+
+        <!-- Alerts -->
+        <div class="card">
+          <h3 style="font-size:1.15rem; margin-bottom:1.5rem;">Regional Health Alerts</h3>
+          <div id="dash-alerts">
+            <p class="text-muted" style="font-size:0.9rem;">No active alerts to show.</p>
+          </div>
+          <a href="/index.html" class="btn btn-outline btn-sm mt-1" style="width:100%; border:1px solid var(--border-color); color:var(--text-secondary); font-size:0.8rem;">Change Location</a>
+        </div>
+      </div>
+
+      <!-- User Profile Info -->
+      <div class="card mt-2">
+        <h3 style="font-size:1.15rem; margin-bottom:1rem;">Profile Overview</h3>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem;">
+           <div class="form-group">
+             <label style="color:var(--text-muted); font-size:0.75rem; text-transform:uppercase;">Account Email</label>
+             <p id="profile-email" style="font-weight:600; margin:0.25rem 0 0;">user@example.com</p>
+           </div>
+           <div class="form-group">
+             <label style="color:var(--text-muted); font-size:0.75rem; text-transform:uppercase;">Current Role</label>
+             <p id="profile-role" style="font-weight:600; margin:0.25rem 0 0;">PATIENT</p>
+           </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/nav.js"></script>
+    <script>
+      if (typeof hgIsAdmin === 'function' && hgIsAdmin()) {
+        window.location.replace('/admin.html');
+      } else {
+        hgRenderNav("dashboard");
+
+        (async () => {
+          try {
+            const s = await hgFetch("/dashboard/stats", { method:"GET" });
+            document.getElementById("welcome-name").textContent = "Welcome back, " + (s.fullName || "User");
+            document.getElementById("stat-chats").textContent = s.totalChats || 0;
+            document.getElementById("stat-symptoms").textContent = s.symptomChecksCount || 0;
+            document.getElementById("stat-location").textContent = (s.profile && s.profile.location) || "Global";
+            
+            if (s.profile) {
+              document.getElementById("profile-email").textContent = s.profile.email;
+              document.getElementById("profile-role").textContent = s.profile.role;
+            }
+
+            const alerts = s.alertsForLocation || [];
+            const alEl = document.getElementById("dash-alerts");
+            if (alerts.length) {
+              alEl.innerHTML = alerts.map(a => `
+                <div style="margin-bottom:1.25rem;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
+                    <strong style="font-size:0.95rem;">${a.title}</strong>
+                    <span style="font-size:0.65rem; font-weight:700; color:var(--color-danger); letter-spacing:0.04em;">${(a.severity||'info').toUpperCase()}</span>
+                  </div>
+                  <p class="text-muted" style="font-size:0.85rem; margin:0; line-height:1.4;">${a.description}</p>
+                </div>`).join("");
+            }
+
+            const tc = Number(s.totalChats || 0);
+            const sc = Number(s.symptomChecksCount || 0);
+            const mh = Number(s.mentalHealthChecksCount || 0) || Math.floor(sc * 0.4); // Mocked if not in backend
+            const ctx = document.getElementById("chart-activity");
+            if (typeof Chart !== "undefined") {
+              // Creating a more modern bar chart for trends
+              new Chart(ctx, {
+                type: "bar",
+                data: {
+                  labels: ["AI Interactions", "Health Assessments", "Mental Health Checkups", "Safety Alerts"],
+                  datasets: [{
+                    label: "Usage Count",
+                    data: [tc, sc, mh, (alerts.length * 2)],
+                    backgroundColor: ["#0D9488", "#38BDF8", "#A855F7", "#F59E0B"],
+                    borderRadius: 8,
+                    barThickness: 45
+                  }]
+                },
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: { legend: { display:false } },
+                  scales: { 
+                    y: { beginAtZero: true, grid: { color: "#E2E8F033" }, ticks: { font: { family:'Inter', size:11 } } },
+                    x: { grid: { display: false }, ticks: { font: { family:'Inter', size:12, weight:'600' } } }
+                  }
+                }
+              });
+            }
+          } catch (e) {
+            console.error("Dashboard error:", e);
+          }
+        })();
+      }
+    </script>
+  </body>
+</html>

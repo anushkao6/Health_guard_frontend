@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Health Assistant — HealthBot AI</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script src="/js/theme.js"></script>
+    <style>
+      /* Chat specific refinements */
+      .chat-page-container {
+        display: flex;
+        height: calc(100vh - 160px);
+        gap: 1.5rem;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* Sidebar Styles */
+      .chat-sidebar {
+        width: 300px;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-surface);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+      }
+      .sidebar-header {
+        padding: 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .history-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .history-item {
+        padding: 0.85rem 1rem;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid transparent;
+      }
+      .history-item:hover {
+        background: var(--bg-main);
+        border-color: var(--border-color);
+      }
+      .history-item.active {
+        background: var(--color-primary-light);
+        color: var(--color-primary);
+        border-color: var(--color-primary);
+      }
+      .history-item-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        overflow: hidden;
+        flex: 1;
+      }
+      .history-item-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .history-item-date {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+      }
+      .btn-delete-history {
+        opacity: 0;
+        padding: 0.4rem;
+        border-radius: 6px;
+        color: var(--text-muted);
+        transition: var(--transition);
+      }
+      .history-item:hover .btn-delete-history {
+        opacity: 1;
+      }
+      .btn-delete-history:hover {
+        background: #FEE2E2;
+        color: var(--color-danger);
+      }
+      
+      .btn-mic {
+        background: transparent;
+        border: none;
+        padding: 0.5rem;
+        color: var(--text-muted);
+        transition: var(--transition);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .btn-mic:hover { background: var(--bg-main); color: var(--color-primary); }
+      .btn-mic.recording {
+        color: white;
+        background: var(--color-danger);
+        animation: pulse 1.5s infinite;
+      }
+      @keyframes pulse {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+        70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+      }
+
+      /* Main Chat Area Styles */
+      .chat-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-surface);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+      }
+      .chat-header-minimal {
+        padding: 1rem 1.5rem;
+        background: var(--bg-surface);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .chat-history-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        background: transparent;
+      }
+      .typing-indicator {
+        padding: 0.5rem 1.5rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        display: none;
+      }
+      .typing-indicator.visible { display: block; }
+
+      @media (max-width: 900px) {
+        .chat-sidebar { display: none; } /* Could add a toggle later */
+        .chat-page-container { padding: 0.5rem; height: calc(100vh - 80px); }
+      }
+
+      /* Voice Mode Overlay Styles */
+      .voice-overlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(12px);
+        z-index: 2000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+        padding: 1.5rem;
+      }
+      .voice-overlay.active { display: flex; }
+      
+      .voice-modal {
+        background: var(--bg-surface);
+        width: 100%;
+        max-width: 450px;
+        padding: 4rem 2rem;
+        border-radius: 40px;
+        position: relative;
+        text-align: center;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+      }
+      
+      .voice-close {
+        position: absolute;
+        top: 2rem;
+        right: 2rem;
+        background: var(--bg-main);
+        border: 1px solid var(--border-color);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-secondary);
+        transition: var(--transition);
+      }
+      .voice-close:hover { background: var(--color-danger); color: white; border-color: var(--color-danger); }
+
+      .voice-status {
+        font-family: var(--font-main);
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--color-primary);
+        letter-spacing: -0.01em;
+      }
+      
+      .voice-mic-container {
+        position: relative;
+        width: 160px;
+        height: 160px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .voice-mic-btn {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: var(--color-primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        position: relative;
+        box-shadow: 0 0 30px rgba(13, 148, 136, 0.3);
+      }
+      
+      .voice-ring {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 2px solid var(--color-primary);
+        opacity: 0;
+      }
+      
+      /* Listening Animation */
+      .listening .voice-ring { animation: voice-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+      .listening .voice-ring:nth-child(2) { animation-delay: 0.6s; }
+      .listening .voice-ring:nth-child(3) { animation-delay: 1.2s; }
+      
+      /* Thinking Animation */
+      .thinking .voice-mic-btn { animation: voice-bounce 1s ease-in-out infinite; }
+      
+      /* Speaking Animation */
+      .speaking .voice-ring { 
+        animation: voice-speak 1.5s ease-in-out infinite; 
+        border-color: var(--color-accent);
+        width: 120%; height: 120%;
+      }
+      
+      @keyframes voice-pulse {
+        0% { transform: scale(0.6); opacity: 0; }
+        50% { opacity: 0.4; }
+        100% { transform: scale(1.4); opacity: 0; }
+      }
+      
+      @keyframes voice-bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+      }
+      
+      @keyframes voice-speak {
+        0%, 100% { transform: scale(1); opacity: 0.1; }
+        50% { transform: scale(1.1); opacity: 0.3; }
+      }
+      
+      .voice-transcript {
+        font-size: 1.15rem;
+        color: var(--text-primary);
+        min-height: 1.5em;
+        line-height: 1.4;
+        max-width: 100%;
+      }
+      
+      .voice-response-preview {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+        max-height: 100px;
+        overflow-y: auto;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+        width: 100%;
+      }
+
+    </style>
+  </head>
+  <body>
+    <header class="site-header" id="site-header"></header>
+
+    <div class="chat-page-container">
+      <!-- Sidebar -->
+      <aside class="chat-sidebar">
+        <div class="sidebar-header">
+          <h3 style="font-size: 1.15rem;">Chat History</h3>
+          <button id="btn-new-chat-sidebar" class="btn btn-primary btn-sm" style="width: 100%;">+ New Conversation</button>
+        </div>
+        <div class="history-list" id="history-list">
+          <!-- History items will be injected here -->
+          <div class="text-center" style="padding: 2rem; color: var(--text-muted); font-size: 0.85rem;">
+            No history yet
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Chat Area -->
+      <main class="chat-main">
+        <!-- Chat Header -->
+        <div class="chat-header-minimal">
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <div style="width:36px; height:36px; border-radius:10px; background:var(--color-primary); color:white; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.85rem;">AI</div>
+            <div>
+              <h4 style="font-size:1rem; margin:0;" id="chat-title">HealthBot Assistant</h4>
+              <p style="font-size:0.7rem; color:var(--text-muted); margin:0;">Online &middot; Educational awareness AI</p>
+            </div>
+          </div>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button id="btn-talk-ai" class="btn btn-primary btn-sm" style="font-size:0.75rem; padding:0.35rem 0.75rem; border-radius: 20px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+              Talk to AI
+            </button>
+            <button id="btn-new-chat" class="btn btn-outline btn-sm" style="font-size:0.75rem; padding:0.35rem 0.75rem;">+ New Session</button>
+          </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div class="chat-history-container" id="msgs">
+          <!-- Messages will be injected here -->
+        </div>
+
+        <!-- Typing -->
+        <div class="typing-indicator" id="typing">Assistant is thinking...</div>
+
+        <!-- Input Area -->
+        <div class="chat-input-area">
+          <div class="chat-input-wrapper">
+            <textarea id="input" rows="1" placeholder="Type your health question here..."></textarea>
+            <div style="display:flex; align-items:center; gap:0.5rem; padding-right:0.5rem;">
+               <input type="file" id="report-file-input" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png" style="display:none" />
+                <button id="upload-report-btn" class="btn btn-sm btn-secondary" title="Upload Report" style="padding:0.5rem; border:none; background:transparent;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                </button>
+                <button id="mic-btn" class="btn-mic" title="Voice Input">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                </button>
+                <button id="send" class="btn btn-primary" style="padding: 0.5rem 1rem; border-radius:10px; font-size:0.85rem;">Send</button>
+            </div>
+          </div>
+          <p style="text-align:center; font-size:0.7rem; color:var(--text-muted); margin-top:0.75rem;">Awareness only. In an emergency, call 112.</p>
+        </div>
+      </main>
+    </div>
+
+    <!-- Voice Mode Overlay -->
+    <div id="voice-overlay" class="voice-overlay">
+      <div class="voice-modal" id="voice-modal">
+        <button id="voice-close" class="voice-close" title="Exit Voice Mode">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        
+        <div id="voice-status" class="voice-status">Listening...</div>
+        
+        <div class="voice-mic-container">
+          <div class="voice-ring"></div>
+          <div class="voice-ring"></div>
+          <div class="voice-ring"></div>
+          <div class="voice-mic-btn">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </div>
+        </div>
+        
+        <div id="voice-transcript" class="voice-transcript">"Try saying something..."</div>
+        <div id="voice-response-preview" class="voice-response-preview" style="display:none;"></div>
+        
+        <div style="display:flex; gap:1rem;">
+          <button id="voice-mute-toggle" class="btn btn-secondary btn-sm" title="Mute/Unmute Bot">
+            <svg id="mute-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <script src="/js/config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/nav.js"></script>
+    <script src="/js/mic.js"></script>
+    <script src="/js/voice-mode.js"></script>
+
+    <script>
+      (function() {
+        if (!hgRequireAuth()) {
+          // redirect
+          return;
+        }
+        hgRenderNav("chat");
+
+        const msgs = document.getElementById("msgs");
+        const typing = document.getElementById("typing");
+        const input = document.getElementById("input");
+        const historyList = document.getElementById("history-list");
+        const reportInput = document.getElementById("report-file-input");
+        const reportBtn = document.getElementById("upload-report-btn");
+        const micBtn = document.getElementById("mic-btn");
+        
+        let activeConversationId = null;
+
+        // Make functions global so they can be called from onclick attributes
+        window.loadConversation = async function(id) {
+          activeConversationId = id;
+          msgs.innerHTML = '<div class="text-center" style="padding: 2rem;"><span class="text-muted">Loading messages...</span></div>';
+          
+          // Update active state in UI
+          document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
+          const activeEl = Array.from(document.querySelectorAll('.history-item')).find(el => el.getAttribute('data-id') == id);
+          if (activeEl) activeEl.classList.add('active');
+
+          try {
+            const messages = await hgFetch(`/chat/conversations/${id}/messages`, { method: "GET" });
+            msgs.innerHTML = "";
+            if (!messages || messages.length === 0) {
+              msgs.innerHTML = '<div class="chat-bubble bot">This conversation has no messages.</div>';
+            } else {
+              messages.forEach(m => {
+              if (m.userMessage) addBubble(m.userMessage, "user");
+              if (m.botResponse) addBubble(m.botResponse, "bot");
+            });
+            }
+            msgs.scrollTop = msgs.scrollHeight;
+          } catch (e) {
+            msgs.innerHTML = '<div class="chat-bubble bot">Error loading conversation: ' + e.message + '</div>';
+          }
+        };
+
+        window.deleteHistory = async function(id) {
+          if (!confirm("Are you sure you want to delete this conversation?")) return;
+          try {
+            await hgFetch(`/chat/conversations/${id}`, { method: "DELETE" });
+            if (activeConversationId == id) {
+              startNewChat();
+            }
+            loadHistory();
+          } catch (e) {
+            alert("Failed to delete conversation: " + e.message);
+          }
+        };
+
+        function addBubble(text, who) {
+          const d = document.createElement("div");
+          d.className = "chat-bubble " + (who === "user" ? "user" : "bot");
+          d.style.whiteSpace = "pre-line"; // Preserve newlines
+          d.textContent = text;
+          msgs.appendChild(d);
+          msgs.scrollTop = msgs.scrollHeight;
+          return d;
+        }
+
+        async function loadHistory() {
+          try {
+            const history = await hgFetch("/chat/conversations", { method: "GET" });
+            renderHistory(history);
+          } catch (e) {
+            console.error("Failed to load history", e);
+            historyList.innerHTML = '<div class="text-center" style="padding: 1rem; color: var(--color-danger); font-size: 0.8rem;">Failed to load history</div>';
+          }
+        }
+
+        function renderHistory(history) {
+          if (!history || history.length === 0) {
+            historyList.innerHTML = '<div class="text-center" style="padding: 2rem; color: var(--text-muted); font-size: 0.85rem;">No history yet</div>';
+            return;
+          }
+
+          historyList.innerHTML = history.map(item => `
+            <div class="history-item ${activeConversationId == item.id ? 'active' : ''}" data-id="${item.id}" onclick="loadConversation(${item.id})">
+              <div class="history-item-info">
+                <span class="history-item-title">${item.title || "New Conversation"}</span>
+                <span class="history-item-date">${item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : 'Just now'}</span>
+              </div>
+              <button class="btn-delete-history" onclick="event.stopPropagation(); deleteHistory(${item.id})" title="Delete conversation">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+              </button>
+            </div>
+          `).join("");
+        }
+
+        function startNewChat() {
+          activeConversationId = null;
+          msgs.innerHTML = '<div class="chat-bubble bot">Hello! I am your AI Health Assistant. Ask me anything about diseases, symptoms, or prevention.</div>';
+          document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
+        }
+
+        async function send() {
+          const text = input.value.trim();
+          if (!text) return;
+          input.value = "";
+          addBubble(text, "user");
+          typing.classList.add("visible");
+
+          try {
+            const body = { message: text };
+            if (activeConversationId) body.conversationId = activeConversationId;
+            const res = await hgFetch("/chat/send", { method:"POST", body });
+            typing.classList.remove("visible");
+            
+            const isNewConversation = !activeConversationId;
+            if (res.conversationId) activeConversationId = res.conversationId;
+            
+            // The backend returns isBot:true message object
+            addBubble(res.content || res.botResponse || res.message, "bot");
+            
+            if (isNewConversation) {
+              loadHistory();
+            }
+          } catch (e) {
+            typing.classList.remove("visible");
+            addBubble("Error: " + e.message, "bot");
+          }
+        }
+
+        async function handleReportUpload(e) {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          addBubble("Analyizing report: " + file.name + "...", "user");
+          typing.classList.add("visible");
+
+          try {
+            const formData = new FormData();
+            formData.append("file", file);
+            if (activeConversationId) {
+              formData.append("conversationId", activeConversationId);
+            }
+            
+            const res = await hgFetch("/reports/analyze", {
+              method: "POST",
+              body: formData
+            });
+            
+            typing.classList.remove("visible");
+            
+            // Utility to clean JSON artifacts if analysis fallback occurred
+            function cleanText(txt) {
+              if (!txt) return "";
+              // Remove basic JSON characters if they appear to be remnants
+              return txt.replace(/[\{\}\"\[\]]/g, '').replace(/\\n/g, '\n').trim();
+            }
+
+            // Format report analysis results - Exact requested format
+            let reportMsg = `Report Summary\n${cleanText(res.summary)}\n\n`;
+            
+            if (res.findings && res.findings.length > 0) {
+              reportMsg += `Key Findings\n- ${res.findings.map(f => cleanText(f)).join("\n- ")}\n\n`;
+            }
+            
+            if (res.explanation && res.explanation.trim() !== "") {
+               reportMsg += `Explanation\n${cleanText(res.explanation)}\n\n`;
+            }
+            
+            reportMsg += `Disclaimer\n${res.disclaimer}`;
+            
+            addBubble(reportMsg, "bot");
+
+            // Refresh history/messages to show the recorded turn in the sidebar/list
+            if (activeConversationId) {
+              loadConversation(activeConversationId);
+              loadHistory();
+            }
+          } catch (e) {
+            typing.classList.remove("visible");
+            addBubble("Error analyzing report: " + e.message, "bot");
+          } finally {
+            reportInput.value = ""; // Clear input
+          }
+        }
+
+        // Event Listeners
+        document.getElementById("send").addEventListener("click", send);
+        input.addEventListener("keydown", (e) => { 
+          if (e.key === "Enter" && !e.shiftKey) { 
+            e.preventDefault(); 
+            send(); 
+          } 
+        });
+        
+        const newChatBtns = [document.getElementById("btn-new-chat"), document.getElementById("btn-new-chat-sidebar")];
+        newChatBtns.forEach(btn => btn.addEventListener("click", startNewChat));
+
+        reportBtn.addEventListener("click", () => reportInput.click());
+        reportInput.addEventListener("change", handleReportUpload);
+
+        if (micBtn) {
+          micBtn.addEventListener("click", () => {
+             // Stop voice conversation mode if it's active
+             if (typeof hgStopVoiceMode === 'function') hgStopVoiceMode();
+             
+             if (typeof hgStartMic === 'function') {
+               hgStartMic(input, micBtn);
+             }
+          });
+          if (!hgMicSupported()) micBtn.style.display = 'none';
+        }
+
+        const talkAiBtn = document.getElementById("btn-talk-ai");
+        if (talkAiBtn) {
+          talkAiBtn.addEventListener("click", () => {
+             // Stop regular mic input if it's active
+             if (typeof hgStopMic === 'function') hgStopMic(micBtn);
+             
+             if (typeof hgOpenVoiceMode === 'function') {
+               hgOpenVoiceMode({
+                conversationId: activeConversationId,
+                onMessage: (msg, who) => {
+                  addBubble(msg, who);
+                  if (who === 'bot' && !activeConversationId) loadHistory();
+                },
+                onConversationId: (id) => { activeConversationId = id; }
+              });
+             }
+          });
+        }
+
+        // Initialize
+        startNewChat();
+        loadHistory();
+      })();
+    </script>
+  </body>
+</html>

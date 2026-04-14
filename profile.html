@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile — HealthGuard AI</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/theme.js"></script>
+    <style>
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 992px) {
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Profile Card */
+        .profile-card {
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .profile-card-header {
+            height: 100px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+            margin: -1.5rem -1.5rem 3rem -1.5rem;
+        }
+        .profile-avatar-wrap {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: white;
+            padding: 4px;
+            box-shadow: var(--shadow-md);
+        }
+        .profile-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            background: var(--bg-main);
+        }
+        .profile-info h2 { margin-bottom: 0.25rem; font-size: 1.5rem; }
+        .profile-info p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+        
+        .profile-stats {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            padding: 1.25rem 0;
+            border-top: 1px solid var(--border-color);
+            margin-top: 1rem;
+        }
+        .stat-item { text-align: center; }
+        .stat-item span { display: block; font-weight: 700; color: var(--text-primary); }
+        .stat-item label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+
+        /* Settings & Contacts */
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+        }
+        .section-title svg { color: var(--color-primary); width: 24px; height: 24px; }
+
+        .settings-form { display: grid; gap: 1.25rem; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-secondary); }
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background: var(--bg-main);
+            color: var(--text-primary);
+            font-family: inherit;
+            transition: var(--transition);
+        }
+        .form-control:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
+
+        /* Emergency Contacts */
+        .contact-list { display: grid; gap: 1rem; }
+        .contact-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            background: var(--bg-main);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+        .contact-details strong { display: block; font-size: 1rem; }
+        .contact-details span { font-size: 0.85rem; color: var(--text-muted); }
+        .contact-actions { display: flex; gap: 0.5rem; }
+
+        /* Risk Score Card */
+        .risk-card {
+            background: var(--bg-surface);
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+        .risk-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            padding: 0.5rem 1.5rem;
+            border-radius: 30px;
+            display: inline-block;
+            margin: 1rem 0;
+        }
+        .risk-low { background: #DCFCE7; color: #166534; }
+        .risk-moderate { background: #FEF9C3; color: #854D0E; }
+        .risk-high { background: #FEE2E2; color: #991B1B; }
+
+        /* Health Tip */
+        .tip-card {
+            background: linear-gradient(135deg, #0D948810, #38BDF810);
+            border: 1px solid var(--color-primary-light);
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            position: relative;
+        }
+        .tip-icon { color: var(--color-primary); margin-bottom: 0.75rem; }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: var(--bg-surface);
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 450px;
+            box-shadow: var(--shadow-lg);
+        }
+    </style>
+</head>
+<body class="dashboard-page">
+    <header class="site-header" id="site-header"></header>
+
+    <div class="container">
+        <div class="profile-grid">
+            <!-- Left Column: Profile Card & Quick Info -->
+            <div style="display: grid; gap: 2rem;">
+                <div class="card profile-card">
+                    <div class="profile-card-header"></div>
+                    <div class="profile-avatar-wrap">
+                        <img src="https://ui-avatars.com/api/?name=User&background=0D9488&color=fff&size=200" alt="Avatar" class="profile-avatar" id="disp-avatar">
+                    </div>
+                    <div class="profile-info" style="margin-top: 1rem;">
+                        <h2 id="disp-name">Loading...</h2>
+                        <p id="disp-email">...</p>
+                        <div class="profile-stats">
+                            <div class="stat-item">
+                                <label>Joined</label>
+                                <span id="disp-joined">...</span>
+                            </div>
+                            <div class="stat-item">
+                                <label>Role</label>
+                                <span id="disp-role">...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Health Risk Score -->
+                <div class="risk-card">
+                    <h3 style="font-size: 1.1rem;">Health Risk Score</h3>
+                    <div id="risk-score-value" class="risk-value risk-low">Low Risk</div>
+                    <p class="text-muted" style="font-size: 0.85rem; line-height: 1.4;">
+                        This score is based on your recent health interactions and is not a medical diagnosis.
+                    </p>
+                </div>
+
+                <!-- Daily Health Tip -->
+                <div class="tip-card">
+                    <div class="tip-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                    </div>
+                    <strong>Today's Health Tip</strong>
+                    <p id="daily-tip" style="font-size: 0.95rem; margin-top: 0.5rem; color: var(--text-secondary);">
+                        Loading daily tip...
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Column: Settings & Contacts -->
+            <div style="display: grid; gap: 2rem;">
+                <!-- Account Settings -->
+                <div class="card">
+                    <div class="section-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        Account Settings
+                    </div>
+                    <form id="profile-form" class="settings-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="input-name" class="form-control" placeholder="Your Name">
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" id="input-email" class="form-control" placeholder="email@example.com">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Location (City/Region)</label>
+                            <input type="text" id="input-location" class="form-control" placeholder="Select Location">
+                        </div>
+                        <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                        </div>
+                    </form>
+
+                    <hr style="margin: 2rem 0; border: 0; border-top: 1px solid var(--border-color);">
+
+                    <div class="section-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        Security
+                    </div>
+                    <form id="password-form" class="settings-form">
+                        <div class="form-group">
+                            <label>Current Password</label>
+                            <input type="password" id="input-curr-pass" class="form-control" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>New Password</label>
+                                <input type="password" id="input-new-pass" class="form-control" required minlength="6">
+                            </div>
+                            <div class="form-group">
+                                <label>Confirm New Password</label>
+                                <input type="password" id="input-conf-pass" class="form-control" required minlength="6">
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+                            <button type="submit" class="btn btn-secondary">Change Password</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Emergency Contacts -->
+                <div class="card">
+                    <div class="justify-between items-center flex" style="margin-bottom: 1.5rem;">
+                        <div class="section-title" style="margin-bottom: 0;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                            Emergency Contacts
+                        </div>
+                        <button class="btn btn-sm btn-outline" onclick="openContactModal()">+ Add Contact</button>
+                    </div>
+                    
+                    <div id="contact-list" class="contact-list">
+                        <!-- Contacts will be rendered here -->
+                        <p class="text-muted" style="text-align: center; padding: 1rem;">No contacts added yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Modal -->
+    <div id="contact-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-title" style="margin-bottom: 1.5rem;">Add Emergency Contact</h3>
+            <form id="contact-form" class="settings-form">
+                <input type="hidden" id="contact-id">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="contact-name" class="form-control" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Relationship</label>
+                        <select id="contact-rel" class="form-control" required>
+                            <option value="">Select...</option>
+                            <option value="Parent">Parent</option>
+                            <option value="Spouse">Spouse</option>
+                            <option value="Sibling">Sibling</option>
+                            <option value="Friend">Friend</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="contact-phone" class="form-control" required>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeContactModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="contact-submit-btn">Save Contact</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/nav.js"></script>
+    <script>
+        if (!hgIsLoggedIn()) {
+            window.location.replace('/login.html');
+        } else if (hgIsAdmin()) {
+            window.location.replace('/admin.html');
+        } else {
+            hgRenderNav("profile");
+        }
+
+        let currentProfile = null;
+
+        async function loadProfile() {
+            try {
+                const data = await hgFetch("/profile");
+                currentProfile = data;
+                renderProfile(data);
+            } catch (err) {
+                console.error("Failed to load profile:", err);
+            }
+        }
+
+        function renderProfile(data) {
+            const u = data.user;
+            
+            // Sidebar/Top info
+            document.getElementById("disp-name").textContent = u.fullName;
+            document.getElementById("disp-email").textContent = u.email;
+            document.getElementById("disp-joined").textContent = new Date(u.createdAt + "Z").toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            document.getElementById("disp-role").textContent = u.role;
+            document.getElementById("disp-avatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullName)}&background=0D9488&color=fff&size=200`;
+
+            // Form values
+            document.getElementById("input-name").value = u.fullName;
+            document.getElementById("input-email").value = u.email;
+            document.getElementById("input-location").value = u.location || "";
+
+            // Health insights
+            const riskEl = document.getElementById("risk-score-value");
+            riskEl.textContent = data.healthRiskScore;
+            riskEl.className = "risk-value " + (data.healthRiskScore === "High Risk" ? "risk-high" : (data.healthRiskScore === "Moderate Risk" ? "risk-moderate" : "risk-low"));
+            
+            document.getElementById("daily-tip").textContent = data.dailyHealthTip;
+
+            // Contacts
+            renderContacts(data.emergencyContacts);
+        }
+
+        function renderContacts(contacts) {
+            const list = document.getElementById("contact-list");
+            if (!contacts.length) {
+                list.innerHTML = '<p class="text-muted" style="text-align: center; padding: 1rem;">No contacts added yet.</p>';
+                return;
+            }
+
+            list.innerHTML = contacts.map(c => `
+                <div class="contact-item">
+                    <div class="contact-details">
+                        <strong>${c.name}</strong>
+                        <span>${c.relationship} • ${c.phoneNumber}</span>
+                    </div>
+                    <div class="contact-actions">
+                        <button class="btn btn-sm btn-secondary" onclick='editContact(${JSON.stringify(c)})' title="Edit">
+                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="deleteContact(${c.id})" title="Delete" style="color:var(--color-danger)">
+                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        // Form Handlers
+        document.getElementById("profile-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const fullName = document.getElementById("input-name").value;
+            const email = document.getElementById("input-email").value;
+            const location = document.getElementById("input-location").value;
+
+            try {
+                const res = await hgFetch("/profile", {
+                    method: "PATCH",
+                    body: { fullName, email, location }
+                });
+                alert("Profile updated successfully!");
+                localStorage.setItem('hg_name', res.fullName);
+                loadProfile();
+            } catch (err) {
+                alert("Update failed: " + err.message);
+            }
+        });
+
+        document.getElementById("password-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const curr = document.getElementById("input-curr-pass").value;
+            const newp = document.getElementById("input-new-pass").value;
+            const conf = document.getElementById("input-conf-pass").value;
+
+            if (newp !== conf) return alert("Passwords do not match");
+
+            try {
+                await hgFetch("/profile/password", {
+                    method: "PUT",
+                    body: { currentPassword: curr, newPassword: newp }
+                });
+                alert("Password changed successfully!");
+                document.getElementById("password-form").reset();
+            } catch (err) {
+                alert("Password change failed: " + err.message);
+            }
+        });
+
+        // Contact Modal Logic
+        function openContactModal() {
+            document.getElementById("modal-title").textContent = "Add Emergency Contact";
+            document.getElementById("contact-form").reset();
+            document.getElementById("contact-id").value = "";
+            document.getElementById("contact-modal").classList.add("active");
+        }
+
+        function closeContactModal() {
+            document.getElementById("contact-modal").classList.remove("active");
+        }
+
+        function editContact(c) {
+            document.getElementById("modal-title").textContent = "Edit Emergency Contact";
+            document.getElementById("contact-id").value = c.id;
+            document.getElementById("contact-name").value = c.name;
+            document.getElementById("contact-rel").value = c.relationship;
+            document.getElementById("contact-phone").value = c.phoneNumber;
+            document.getElementById("contact-modal").classList.add("active");
+        }
+
+        document.getElementById("contact-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const id = document.getElementById("contact-id").value;
+            const data = {
+                name: document.getElementById("contact-name").value,
+                relationship: document.getElementById("contact-rel").value,
+                phoneNumber: document.getElementById("contact-phone").value
+            };
+
+            try {
+                if (id) {
+                    await hgFetch("/profile/contacts/" + id, { method: "PUT", body: data });
+                } else {
+                    await hgFetch("/profile/contacts", { method: "POST", body: data });
+                }
+                closeContactModal();
+                loadProfile();
+            } catch (err) {
+                alert("Operation failed: " + err.message);
+            }
+        });
+
+        async function deleteContact(id) {
+            if (!confirm("Are you sure you want to delete this contact?")) return;
+            try {
+                await hgFetch("/profile/contacts/" + id, { method: "DELETE" });
+                loadProfile();
+            } catch (err) {
+                alert("Delete failed: " + err.message);
+            }
+        }
+
+        loadProfile();
+    </script>
+</body>
+</html>

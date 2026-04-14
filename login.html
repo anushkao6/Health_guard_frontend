@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login — HealthBot AI</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script src="/js/theme.js"></script>
+    <style>
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .auth-card {
+        width: 100%;
+        max-width: 440px;
+        background: var(--bg-surface);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card auth-card" style="padding: 2.5rem;">
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <a href="/index.html" class="brand" style="justify-content: center; font-size: 1.75rem; margin-bottom: 0.5rem;">HealthBot <span>AI</span></a>
+        <p class="text-secondary" style="font-size: 0.95rem;">Empowering lives through health awareness.</p>
+      </div>
+
+      <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; text-align: center;">Welcome Back</h2>
+      <p class="text-muted text-center mb-2" style="font-size: 0.9rem;">Sign in to access your dashboard and AI assistant.</p>
+
+      <form class="ap-form" id="login-form">
+        <div class="form-group">
+          <label style="font-weight:600; font-size:0.85rem; color:var(--text-secondary); display:block; margin-bottom:0.4rem;">Email Address</label>
+          <input type="email" id="email" required placeholder="name@example.com" style="width:100%; padding:0.75rem 1rem; border-radius:var(--radius-md); border:1.5px solid var(--border-color); background:var(--bg-main); font-size:0.95rem; color:var(--text-primary);" />
+        </div>
+        <div class="form-group">
+          <label style="font-weight:600; font-size:0.85rem; color:var(--text-secondary); display:block; margin-bottom:0.4rem;">Password</label>
+          <input type="password" id="password" required placeholder="••••••••" style="width:100%; padding:0.75rem 1rem; border-radius:var(--radius-md); border:1.5px solid var(--border-color); background:var(--bg-main); font-size:0.95rem; color:var(--text-primary);" />
+        </div>
+        
+        <p id="error-msg" class="text-danger" style="font-size: 0.85rem; margin-top: -0.5rem; margin-bottom: 1rem; display: none; color: var(--color-danger); font-weight: 600;">Incorrect email or password. Please try again.</p>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem; padding: 0.85rem;">Sign In</button>
+      </form>
+
+      <div style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+        Don't have an account? <a href="/register.html" style="font-weight: 700;">Create one</a>
+      </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/api.js"></script>
+    <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const nextUrl = urlParams.get('next') || '/dashboard.html';
+
+      document.getElementById("login-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const errEl = document.getElementById("error-msg");
+        errEl.style.display = "none";
+
+        try {
+          const res = await hgFetch("/auth/login", {
+            method: "POST",
+            body: { email, password }
+          });
+          hgLogin(res.token, res.fullName, res.role);
+          window.location.replace(res.role === 'ADMIN' ? '/admin.html' : nextUrl);
+        } catch (err) {
+          errEl.textContent = err.message;
+          errEl.style.display = "block";
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HealthBot AI — Public Health Awareness & Prevention</title>
+    <meta name="description" content="Learn about diseases, prevention, and symptoms. Get AI-powered guidance and location-based air quality health alerts." />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script src="/js/theme.js"></script>
+  </head>
+  <body>
+    <div class="emergency-banner" style="background:#FEE2E2; color:#991B1B; text-align:center; padding:0.6rem; font-weight:600; font-size:0.85rem; border-bottom:1px solid #FECACA;">
+      For medical emergencies, call <strong>112</strong> immediately. This platform is for awareness only.
+    </div>
+
+    <header class="site-header" id="site-header"></header>
+
+    <main>
+      <!-- Hero -->
+      <section class="hero">
+        <div class="container" style="padding-top: 0;">
+          <h1>Public Health Awareness, <span style="color: var(--color-primary)">Clearly Explained</span></h1>
+          <p>Understand diseases, symptoms, and prevention in plain language. Get AI-powered guidance and location-relevant health alerts.</p>
+          <div class="hero-actions" style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
+            <a class="btn btn-primary" href="#" id="btn-start-chat">Ask the Assistant</a>
+            <a class="btn btn-secondary" href="/symptom-checker.html" id="btn-symptoms">Check Symptoms</a>
+            <a class="btn btn-secondary" href="/mental-health-checkup.html" id="btn-mh">Mental Health Checkup</a>
+            <a class="btn btn-secondary" href="/health-awareness.html">Browse Diseases</a>
+          </div>
+          
+          <div class="hero-stats" style="display:flex; justify-content:center; gap:2.5rem; margin-top:3.5rem; flex-wrap:wrap;">
+            <div class="stat-item"><strong style="font-size:1.5rem; color:var(--color-primary)">10+</strong><p style="margin:0; font-size:0.85rem; color:var(--text-muted)">Diseases Covered</p></div>
+            <div class="stat-item"><strong style="font-size:1.5rem; color:var(--color-primary)">Live</strong><p style="margin:0; font-size:0.85rem; color:var(--text-muted)">Location Alerts</p></div>
+            <div class="stat-item"><strong style="font-size:1.5rem; color:var(--color-primary)">AI</strong><p style="margin:0; font-size:0.85rem; color:var(--text-muted)">Health Assistant</p></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="container">
+        <!-- Location & AQI Section -->
+        <div id="sect-loc">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem;">
+            <h3 style="font-size: 1.25rem; letter-spacing: -0.01em;">Location & Air Quality</h3>
+            <div style="display:flex; align-items:center; gap: 0.75rem;">
+               <input type="text" id="alert-loc" class="form-input" readonly placeholder="Detecting..." style="padding:0.4rem 0.8rem; border-radius:var(--radius-sm); border:1px solid var(--border-color); font-size:0.85rem; width:160px; background:var(--bg-surface)" />
+               <button type="button" class="btn btn-outline" id="btn-geo" style="padding:0.4rem 1rem; font-size:0.85rem;">Refresh</button>
+            </div>
+          </div>
+          <div id="aqi-alert-container">
+            <!-- Rendered by aqi.js -->
+            <p class="text-center text-muted">Detecting your location air quality...</p>
+          </div>
+        </div>
+
+        <!-- Health Support Near You -->
+        <div id="sect-nearby" style="margin-top: 4rem;">
+          <h3 style="font-size: 1.25rem; letter-spacing: -0.01em; margin-bottom: 0.5rem;">Health Support Near You</h3>
+          <p class="text-muted mb-2">Knowing your nearest health facilities can save critical time in an emergency.</p>
+          <div id="health-resources-container">
+            <!-- Rendered by health-resources.js -->
+          </div>
+        </div>
+
+        <!-- Prevention Basics -->
+        <div style="margin-top: 5rem;">
+           <h2 class="text-center mb-2" style="font-size: 2rem;">Public Health Basics</h2>
+           <p class="text-center text-muted mb-2" style="max-width:600px; margin-left:auto; margin-right:auto;">Core prevention strategies recommended by health authorities to protect you and your community.</p>
+           
+           <div class="tips-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem;">
+              <div class="card" style="display:flex; gap:1.25rem; padding:1.75rem;">
+                <div style="width:48px; height:48px; border-radius:12px; background:var(--color-primary-light); color:var(--color-primary); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.2rem;">H</div>
+                <div>
+                  <h4 style="font-size:1.1rem; margin-bottom:0.25rem;">Hand Hygiene</h4>
+                  <p class="text-muted" style="font-size:0.9rem; margin:0;">Wash hands with soap for at least 20 seconds, especially after public contact.</p>
+                </div>
+              </div>
+              <div class="card" style="display:flex; gap:1.25rem; padding:1.75rem;">
+                <div style="width:48px; height:48px; border-radius:12px; background:var(--color-primary-light); color:var(--color-primary); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.2rem;">V</div>
+                <div>
+                  <h4 style="font-size:1.1rem; margin-bottom:0.25rem;">Stay Vaccinated</h4>
+                  <p class="text-muted" style="font-size:0.9rem; margin:0;">Keep vaccines up to date per local schedule to prevent outbreaks.</p>
+                </div>
+              </div>
+              <div class="card" id="card-mh" style="display:flex; gap:1.25rem; padding:1.75rem;">
+                <div style="width:48px; height:48px; border-radius:12px; background:var(--color-primary-light); color:var(--color-primary); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.2rem;">A</div>
+                <div>
+                  <h4 style="font-size:1.1rem; margin-bottom:0.25rem;">Mental Health Checkup</h4>
+                  <p class="text-muted" style="font-size:0.9rem; margin:0;">Assess your overall mental wellness, including stress, mood, and focus. <a href="/mental-health-checkup.html" class="text-primary" style="font-weight:600;">Check Now &rarr;</a></p>
+                </div>
+              </div>
+           </div>
+        </div>
+
+        <!-- FAQ -->
+        <div id="faq" style="margin-top: 5rem; max-width:800px; margin-left:auto; margin-right:auto;">
+          <h2 class="text-center mb-2" style="font-size: 2rem;">Frequently Asked Questions</h2>
+          <div class="card" style="padding:0.5rem 1.5rem;">
+            <details style="padding:1.25rem 0; border-bottom:1px solid var(--border-color)">
+              <summary style="font-weight:600; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center;">
+                Is HealthBot AI a doctor? <span style="color:var(--text-muted); font-size:1.2rem;">+</span>
+              </summary>
+              <p class="text-muted mt-1" style="font-size:0.9rem;">No. It provides general disease awareness and prevention education only. It does not diagnose or prescribe treatments.</p>
+            </details>
+            <details style="padding:1.25rem 0; border-bottom:1px solid var(--border-color)">
+              <summary style="font-weight:600; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center;">
+                Can the chatbot give a diagnosis? <span style="color:var(--text-muted); font-size:1.2rem;">+</span>
+              </summary>
+              <p class="text-muted mt-1" style="font-size:0.9rem;">No. The assistant avoids diagnoses and medicine recommendations. Use the information to learn, then consult a clinician for personal evaluation.</p>
+            </details>
+            <details style="padding:1.25rem 0; border-bottom:1px solid var(--border-color)">
+              <summary style="font-weight:600; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center;">
+                How does symptom checking work? <span style="color:var(--text-muted); font-size:1.2rem;">+</span>
+              </summary>
+              <p class="text-muted mt-1" style="font-size:0.9rem;">The app maps selected symptoms to broad educational categories and safety tips based on established health data.</p>
+            </details>
+            <details style="padding:1.25rem 0; border-bottom:1px solid var(--border-color)">
+              <summary style="font-weight:600; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center;">
+                What is the report analysis feature? <span style="color:var(--text-muted); font-size:1.2rem;">+</span>
+              </summary>
+              <p class="text-muted mt-1" style="font-size:0.9rem;">You can upload a medical report in the chatbot. The AI will explain findings in plain language for educational purposes only.</p>
+            </details>
+            <details style="padding:1.25rem 0; border-bottom:1px solid var(--border-color)">
+              <summary style="font-weight:600; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center;">
+                How do I use location-based health alerts? <span style="color:var(--text-muted); font-size:1.2rem;">+</span>
+              </summary>
+              <p class="text-muted mt-1" style="font-size:0.9rem;">Logged-in users get automatic info on local Air Quality Index (AQI) and health outbreaks based on their profile location or detected area.</p>
+            </details>
+          </div>
+          <p class="text-center mt-2">
+            <a href="/faq.html" class="text-primary" style="font-weight:600; font-size:0.9rem;">View All Frequently Asked Questions &rarr;</a>
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <footer class="site-footer" style="margin-top:5rem;">
+      <div class="container">
+        <div style="margin-bottom:2rem;">
+          <a class="brand" href="/" style="justify-content:center;">HealthBot <span>AI</span></a>
+          <p class="text-muted mt-1" style="max-width:500px; margin-left:auto; margin-right:auto;">A public health awareness initiative to make medical information accessible and understandable for everyone.</p>
+        </div>
+        <div style="border-top:1px solid var(--border-color); padding-top:2rem; font-size:0.85rem; color:var(--text-muted);">
+          &copy; 2026 HealthBot AI &middot; For Awareness Only &middot; Not Medical Advice
+        </div>
+      </div>
+    </footer>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/location.js"></script>
+    <script src="/js/aqi.js"></script>
+    <script src="/js/health-resources.js"></script>
+    <script src="/js/nav.js"></script>
+    <script>
+      hgRenderNav("home");
+
+      // Admin Restrictions
+      if (typeof hgIsAdmin === 'function' && hgIsAdmin()) {
+        ['btn-start-chat', 'btn-symptoms', 'btn-mh', 'card-mh', 'sect-loc', 'sect-nearby'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.style.display = 'none';
+        });
+      }
+
+      const locInput = document.getElementById("alert-loc");
+
+      function loadAQI(city) {
+        const aqiData = getAQIForLocation(city);
+        const month = new Date().getMonth() + 1;
+        const seasonal = getSeasonalAlerts(city, month);
+        renderLocationHealthAlert("aqi-alert-container", city, aqiData, seasonal);
+      }
+
+      async function applyDetected() {
+        try {
+          const coords = await hgGetCoords();
+          const geo = await hgReverseGeocode(coords.lat, coords.lon);
+          const label = (geo && (geo.label || geo.displayName)) || "Global";
+          locInput.value = label;
+          loadAQI(label);
+          renderNearbyHealthResources(label, "health-resources-container", coords);
+        } catch (e) {
+          console.error("Location detection failed:", e);
+          locInput.value = "Global";
+          loadAQI("Global");
+          renderNearbyHealthResources("Global", "health-resources-container");
+        }
+      }
+
+      document.getElementById("btn-geo").addEventListener("click", applyDetected);
+      applyDetected();
+
+      document.getElementById("btn-start-chat").addEventListener("click", (e) => {
+        e.preventDefault();
+        window.location.href = hgIsLoggedIn() ? "/chatbot.html" : "/login.html?next=" + encodeURIComponent("/chatbot.html");
+      });
+      document.getElementById("btn-symptoms").addEventListener("click", (e) => {
+        if (!hgIsLoggedIn()) { e.preventDefault(); window.location.href = "/login.html?next=" + encodeURIComponent("/symptom-checker.html"); }
+      });
+    </script>
+  </body>
+</html>

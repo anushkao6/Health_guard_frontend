@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Management — HealthGuard AI</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="/js/theme.js"></script>
+    <style>
+      /* Admin Specific Styles */
+      .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1.5rem;
+      }
+      .modal-content {
+        background: var(--bg-surface);
+        width: 100%;
+        max-width: 600px;
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        box-shadow: var(--shadow-lg);
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      .form-group { margin-bottom: 1.25rem; }
+      .form-group label { display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem; }
+      .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+        background: var(--bg-main);
+        color: var(--text-primary);
+        font-family: inherit;
+      }
+      .form-control:focus { outline: 2px solid var(--color-primary); border-color: transparent; }
+      
+      .badge-severity {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 4px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      .severity-high { background: #fee2e2; color: #b91c1c; }
+      .severity-medium { background: #fef3c7; color: #92400e; }
+      .severity-low { background: #dcfce7; color: #166534; }
+
+      .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-muted);
+      }
+      
+      .action-btns {
+        display: flex;
+        gap: 0.5rem;
+      }
+      
+      .search-box-wrap {
+        position: relative;
+        flex: 1;
+        max-width: 400px;
+      }
+      .search-box-wrap input { width: 100%; padding-left: 2.5rem; }
+      .search-icon {
+        position: absolute;
+        left: 0.85rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+      }
+    </style>
+  </head>
+  <body class="admin-page">
+    <header class="site-header" id="site-header"></header>
+
+    <div class="container" style="padding: 0;">
+      <div style="margin-bottom: 2.5rem;">
+        <h1 style="font-size: 2rem; margin-bottom: 0.5rem;" id="admin-page-heading">Admin Overview</h1>
+        <p class="text-secondary" id="admin-page-subheading">System-wide performance and management portal.</p>
+      </div>
+
+      <!-- Stats Grid -->
+      <div id="stats-container" class="stats-grid">
+        <div class="stat-widget">
+          <span class="stat-widget-label">TOTAL USERS</span>
+          <span class="stat-widget-value" id="stat-users">0</span>
+          <span class="stat-widget-trend">Platform adoption</span>
+        </div>
+        <div class="stat-widget">
+          <span class="stat-widget-label">DISEASES</span>
+          <span class="stat-widget-value" id="stat-diseases">0</span>
+          <span class="stat-widget-trend">Catalog depth</span>
+        </div>
+        <div class="stat-widget">
+          <span class="stat-widget-label">ACTIVE ALERTS</span>
+          <span class="stat-widget-value" id="stat-alerts">0</span>
+          <span class="stat-widget-trend trend-down">Current warnings</span>
+        </div>
+        <div class="stat-widget">
+          <span class="stat-widget-label">TOTAL ASSESSMENTS</span>
+          <span class="stat-widget-value" id="stat-checks">0</span>
+          <span class="stat-widget-trend trend-up">Community wellness</span>
+        </div>
+      </div>
+
+      <!-- Sections -->
+      <div id="admin-sections-wrap">
+        
+        <!-- SECTION: DASHBOARD -->
+        <div id="section-overview" class="admin-view">
+          <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:1.5rem; margin-top:1rem;">
+            <div class="card">
+              <h3 style="font-size:1.15rem; margin-bottom:1.5rem;">System Usage Preference</h3>
+              <div style="height:320px;"><canvas id="chart-preference"></canvas></div>
+            </div>
+            <div class="card">
+              <h3 style="font-size:1.15rem; margin-bottom:1.5rem;">Most Viewed Diseases</h3>
+              <div id="dash-top-diseases" style="display:flex; flex-direction:column; gap:1rem;">
+                 <p class="text-muted">Loading metrics...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION: USERS -->
+        <div id="section-users" class="admin-view" style="display:none;">
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; gap:1rem; flex-wrap:wrap;">
+              <div class="search-box-wrap">
+                <span class="search-icon">&#128269;</span>
+                <input type="text" id="user-search" class="form-control" placeholder="Search by name or email..." />
+              </div>
+            </div>
+            <div class="admin-table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Registered</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="users-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION: DISEASES -->
+        <div id="section-diseases" class="admin-view" style="display:none;">
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+              <h3 style="font-size:1.15rem;">Disease Library</h3>
+              <button class="btn btn-primary btn-sm" onclick="showDiseaseModal()">+ Add Disease</button>
+            </div>
+            <div class="admin-table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Symptoms</th>
+                    <th>Prevention</th>
+                    <th>Views</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="diseases-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION: ALERTS -->
+        <div id="section-alerts" class="admin-view" style="display:none;">
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+              <h3 style="font-size:1.15rem;">Health Alerts</h3>
+              <button class="btn btn-primary btn-sm" onclick="showAlertModal()">+ New Alert</button>
+            </div>
+            <div class="admin-table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Location</th>
+                    <th>Severity</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="alerts-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- MODAL: DISEASE -->
+    <div id="modal-disease" class="modal-overlay">
+      <div class="modal-content">
+        <h2 id="disease-modal-title" style="margin-bottom:1.5rem;">Add New Disease</h2>
+        <form id="form-disease">
+          <input type="hidden" id="disease-id" />
+          <div class="form-group">
+            <label>Disease Name</label>
+            <input type="text" id="disease-name" class="form-control" required placeholder="e.g. Typhoid" />
+          </div>
+          <div class="form-group">
+            <label>Symptoms (One per line)</label>
+            <textarea id="disease-symptoms" class="form-control" rows="2" required placeholder="Fever&#10;Headache"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Causes</label>
+            <textarea id="disease-causes" class="form-control" rows="2" placeholder="Contaminated water, poor hygiene"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Prevention</label>
+            <textarea id="disease-prevention" class="form-control" rows="2" placeholder="Wash hands, drink boiled water"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Treatment / Description</label>
+            <textarea id="disease-desc" class="form-control" rows="3" required placeholder="Antibiotics, fluid replacement..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Emergency Warning</label>
+            <input type="text" id="disease-emergency" class="form-control" placeholder="Seek immediate medical help if unresponsiveness occurs." />
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModals()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btn-save-disease">Save Disease</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL: ALERT -->
+    <div id="modal-alert" class="modal-overlay">
+      <div class="modal-content">
+        <h2 id="alert-modal-title" style="margin-bottom:1.5rem;">Broadcast Health Alert</h2>
+        <form id="form-alert">
+          <input type="hidden" id="alert-id" />
+          <div class="form-group">
+            <label>Alert Title</label>
+            <input type="text" id="alert-title" class="form-control" required placeholder="e.g. Dengue Outbreak" />
+          </div>
+          <div class="form-group">
+            <label>Location</label>
+            <input type="text" id="alert-location" class="form-control" required placeholder="e.g. Mumbai" />
+          </div>
+          <div class="form-group">
+            <label>Severity</label>
+            <select id="alert-severity" class="form-control">
+              <option value="CRITICAL">Critical</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="LOW">Low</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="alert-desc" class="form-control" rows="4" required placeholder="Details about the alert..."></textarea>
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModals()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btn-save-alert">Post Alert</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/nav.js"></script>
+    <script>
+      // AUTH & NAV
+      if (!hgIsLoggedIn() || !hgIsAdmin()) {
+        window.location.replace('/login.html');
+      } else {
+        hgRenderNav("admin");
+      }
+
+      // STATE
+      let allUsers = [];
+      let allDiseases = [];
+      let allAlerts = [];
+
+      // ROUTING
+      function handleRoute() {
+        const hash = window.location.hash.replace('#', '') || 'overview';
+        document.querySelectorAll('.admin-view').forEach(v => v.style.display = 'none');
+        
+        const target = document.getElementById('section-' + hash);
+        if (target) target.style.display = 'block';
+
+        const titles = { overview: 'Admin Overview', users: 'User Management', diseases: 'Disease Library', alerts: 'Health Alerts' };
+        const subs = { 
+            overview: 'System-wide performance and management portal.', 
+            users: 'Manage registered users and access permissions.',
+            diseases: 'Add, update or remove medical knowledge entries.',
+            alerts: 'Broadcast critical health warnings to the community.'
+        };
+        
+        document.getElementById('admin-page-heading').textContent = titles[hash] || 'Admin Portal';
+        document.getElementById('admin-page-subheading').textContent = subs[hash] || '';
+        
+        // Refresh data for the section
+        if (hash === 'users') loadUsers();
+        if (hash === 'diseases') loadDiseases();
+        if (hash === 'alerts') loadAlerts();
+        if (hash === 'overview') loadOverview();
+      }
+
+      window.addEventListener('hashchange', handleRoute);
+      window.addEventListener('load', handleRoute);
+
+      // DATA FETCHING
+      async function loadOverview() {
+        try {
+          const stats = await hgFetch("/admin/analytics");
+          document.getElementById("stat-users").textContent = stats.totalUsers || 0;
+          document.getElementById("stat-diseases").textContent = stats.totalDiseases || 0;
+          document.getElementById("stat-alerts").textContent = stats.totalHealthAlerts || 0;
+          document.getElementById("stat-checks").textContent = stats.totalSymptomChecks || 0;
+
+          // Chart
+          const ctx = document.getElementById("chart-preference");
+          if (ctx) {
+            new Chart(ctx, {
+              type: "doughnut",
+              data: {
+                labels: ["Chatbot Usage", "Health Assessments"],
+                datasets: [{
+                  data: [stats.totalChats || 0, stats.totalSymptomChecks || 0],
+                  backgroundColor: ["#0D9488", "#38BDF8"],
+                  borderWidth: 0, hoverOffset: 15
+                }]
+              },
+              options: { cutout: '75%', plugins: { legend: { position: 'bottom' } } }
+            });
+          }
+
+          // Top Diseases
+          const topD = stats.mostSearchedDiseases || [];
+          document.getElementById("dash-top-diseases").innerHTML = topD.length 
+            ? topD.map(d => `<div class="flex justify-between items-center" style="padding:0.75rem 0; border-bottom:1px solid var(--border-color)">
+                <span class="font-bold">${d.name}</span>
+                <span class="text-muted" style="font-size:0.85rem;">${d.views} views</span>
+              </div>`).join("")
+            : '<p class="text-muted">No search data available.</p>';
+        } catch(e) { console.error(e); }
+      }
+
+      async function loadUsers() {
+        const tbody = document.getElementById("users-tbody");
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-2">Loading users...</td></tr>';
+        try {
+          allUsers = await hgFetch("/admin/users");
+          renderUsers(allUsers);
+        } catch(e) { tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${e.message}</td></tr>`; }
+      }
+
+      function renderUsers(users) {
+        const tbody = document.getElementById("users-tbody");
+        if (!users.length) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-2">No users found.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = users.map(u => `
+          <tr>
+            <td style="font-family:monospace; font-size:0.8rem;">#${u.id}</td>
+            <td class="font-bold">${u.fullName}</td>
+            <td>${u.email}</td>
+            <td><span class="role-badge ${u.role === 'ADMIN' ? 'role-admin' : 'role-user'}">${u.role}</span></td>
+            <td class="text-muted">${new Date(u.registeredAt).toLocaleDateString()}</td>
+            <td>
+              <button class="btn btn-sm" style="color:var(--color-danger); background:rgba(239, 68, 68, 0.1);" onclick="deleteUser(${u.id})">Delete</button>
+            </td>
+          </tr>
+        `).join("");
+      }
+
+      async function loadDiseases() {
+        const tbody = document.getElementById("diseases-tbody");
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-2">Loading diseases...</td></tr>';
+        try {
+          allDiseases = await hgFetch("/diseases");
+          renderDiseases(allDiseases);
+        } catch(e) { tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${e.message}</td></tr>`; }
+      }
+
+      function renderDiseases(list) {
+        const tbody = document.getElementById("diseases-tbody");
+        tbody.innerHTML = list.map(d => `
+          <tr>
+            <td class="font-bold">${d.name}</td>
+            <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${d.symptoms.join(", ")}</td>
+            <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${d.prevention || '-'}</td>
+            <td>${d.viewCount || 0}</td>
+            <td class="action-btns">
+              <button class="btn btn-sm btn-secondary" onclick='editDisease(${JSON.stringify(d).replace(/'/g, "&apos;")})'>Edit</button>
+              <button class="btn btn-sm" style="color:var(--color-danger); background:rgba(239, 68, 68, 0.1);" onclick="deleteDisease(${d.id})">Delete</button>
+            </td>
+          </tr>
+        `).join("");
+      }
+
+      async function loadAlerts() {
+        const tbody = document.getElementById("alerts-tbody");
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-2">Loading alerts...</td></tr>';
+        try {
+          allAlerts = await hgFetch("/admin/alerts");
+          renderAlerts(allAlerts);
+        } catch(e) { tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${e.message}</td></tr>`; }
+      }
+
+      function renderAlerts(list) {
+        const tbody = document.getElementById("alerts-tbody");
+        tbody.innerHTML = list.map(a => `
+          <tr>
+            <td class="font-bold">${a.title}</td>
+            <td>${a.location}</td>
+            <td><span class="badge-severity severity-${a.severity.toLowerCase()}">${a.severity}</span></td>
+            <td class="text-muted">${new Date(a.datePosted).toLocaleDateString()}</td>
+            <td class="action-btns">
+               <button class="btn btn-sm btn-secondary" onclick='editAlert(${JSON.stringify(a).replace(/'/g, "&#39;")})'>Edit</button>
+               <button class="btn btn-sm" style="color:var(--color-danger); background:rgba(239, 68, 68, 0.1);" onclick="deleteAlert(${a.id})">Delete</button>
+            </td>
+          </tr>
+        `).join("");
+      }
+
+      // ACTIONS
+      async function deleteUser(id) {
+        if (!confirm("Are you sure? This user and all their data will be permanently removed.")) return;
+        try {
+          await hgFetch(`/admin/users/${id}`, { method: "DELETE" });
+          loadUsers();
+        } catch(e) { alert(e.message); }
+      }
+
+      async function deleteDisease(id) {
+        if (!confirm("Remove this disease from library?")) return;
+        try {
+          await hgFetch(`/admin/diseases/${id}`, { method: "DELETE" });
+          loadDiseases();
+        } catch(e) { alert(e.message); }
+      }
+
+      async function deleteAlert(id) {
+        if (!confirm("Delete this broadcast alert?")) return;
+        try {
+          await hgFetch(`/admin/alerts/${id}`, { method: "DELETE" });
+          loadAlerts();
+        } catch(e) { alert(e.message); }
+      }
+
+      // MODALS
+      function closeModals() {
+        document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+      }
+
+      function showDiseaseModal(data = null) {
+        const modal = document.getElementById('modal-disease');
+        const form = document.getElementById('form-disease');
+        form.reset();
+        document.getElementById('disease-id').value = data ? data.id : '';
+        document.getElementById('disease-modal-title').textContent = data ? 'Edit Disease' : 'Add New Disease';
+        
+        if (data) {
+          document.getElementById('disease-name').value = data.name;
+          document.getElementById('disease-symptoms').value = data.symptoms.join("\n");
+          document.getElementById('disease-causes').value = data.causes || '';
+          document.getElementById('disease-prevention').value = data.prevention || '';
+          document.getElementById('disease-desc').value = data.treatment || '';
+          document.getElementById('disease-emergency').value = data.emergencyWarning || '';
+        }
+        modal.display = 'flex';
+        modal.style.display = 'flex';
+      }
+
+      function showAlertModal(data = null) {
+        const modal = document.getElementById('modal-alert');
+        const form = document.getElementById('form-alert');
+        form.reset();
+        document.getElementById('alert-id').value = data ? data.id : '';
+        document.getElementById('alert-modal-title').textContent = data ? 'Edit Alert' : 'Broadcast Health Alert';
+        
+        if (data) {
+          document.getElementById('alert-title').value = data.title;
+          document.getElementById('alert-location').value = data.location;
+          document.getElementById('alert-severity').value = data.severity;
+          document.getElementById('alert-desc').value = data.description;
+        }
+        modal.style.display = 'flex';
+      }
+
+      function editDisease(d) { showDiseaseModal(d); }
+      function editAlert(a) { showAlertModal(a); }
+
+      // FORM SUBMISSIONS
+      document.getElementById('form-disease').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('disease-id').value;
+        const payload = {
+          name: document.getElementById('disease-name').value,
+          symptoms: document.getElementById('disease-symptoms').value.split("\n").filter(x => x.trim()),
+          causes: document.getElementById('disease-causes').value,
+          prevention: document.getElementById('disease-prevention').value,
+          treatment: document.getElementById('disease-desc').value,
+          emergencyWarning: document.getElementById('disease-emergency').value || "Consult a doctor immediately if symptoms persist."
+        };
+        
+        try {
+          const method = id ? "PUT" : "POST";
+          const path = id ? `/admin/diseases/${id}` : "/admin/diseases";
+          await hgFetch(path, { method, body: payload });
+          closeModals();
+          loadDiseases();
+        } catch(e) { alert(e.message); }
+      });
+
+      document.getElementById('form-alert').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('alert-id').value;
+        const payload = {
+          title: document.getElementById('alert-title').value,
+          location: document.getElementById('alert-location').value,
+          severity: document.getElementById('alert-severity').value,
+          description: document.getElementById('alert-desc').value
+        };
+        
+        try {
+          const method = id ? "PUT" : "POST";
+          const path = id ? `/admin/alerts/${id}` : "/admin/alerts";
+          await hgFetch(path, { method, body: payload });
+          closeModals();
+          loadAlerts();
+        } catch(e) { alert(e.message); }
+      });
+
+      // Search
+      document.getElementById('user-search').addEventListener('input', (e) => {
+        const q = e.target.value.toLowerCase();
+        const filtered = allUsers.filter(u => u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+        renderUsers(filtered);
+      });
+
+    </script>
+  </body>
+</html>

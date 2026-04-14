@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Disease Info — HealthGuard AI</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script src="/js/theme.js"></script>
+    <style>
+      .detail-header {
+        margin-bottom: 2.5rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .detail-section {
+        margin-bottom: 2.5rem;
+      }
+      .detail-section h3 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        color: var(--color-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .detail-section h3::before {
+        content: '';
+        display: block;
+        width: 4px;
+        height: 20px;
+        background: var(--color-primary);
+        border-radius: 2px;
+      }
+      .symptom-tag {
+        display: inline-block;
+        padding: 0.4rem 1rem;
+        background: var(--bg-main);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        margin: 0 0.5rem 0.5rem 0;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+      .emergency-alert {
+        background: #FEF2F2;
+        border: 1.5px solid #FCA5A5;
+        color: #991B1B;
+        padding: 1.5rem;
+        border-radius: var(--radius-lg);
+        margin-top: 3rem;
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+      .emergency-alert svg { flex-shrink: 0; color: #DC2626; }
+      .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-bottom: 2rem;
+        transition: var(--transition);
+      }
+      .back-btn:hover { color: var(--color-primary); transform: translateX(-4px); }
+    </style>
+  </head>
+  <body>
+    <header class="site-header" id="site-header"></header>
+
+    <div class="container" style="max-width: 900px;">
+      <a href="/health-awareness.html" class="back-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Back to Library
+      </a>
+
+      <div id="disease-content">
+        <div class="card" style="padding: 4rem 2rem; text-align: center;">
+          <p class="text-muted">Loading research-based health data...</p>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/nav.js"></script>
+    <script>
+      hgRenderNav("awareness");
+
+      const params = new URLSearchParams(window.location.search);
+      const name = params.get("name") || "";
+
+      function escapeHtml(t) {
+        const d = document.createElement("div");
+        d.textContent = t || "";
+        return d.innerHTML;
+      }
+
+      (async () => {
+        const container = document.getElementById("disease-content");
+        if (!name) {
+          container.innerHTML = '<div class="card text-center"><p class="text-danger">Invalid disease selected.</p></div>';
+          return;
+        }
+
+        try {
+          const d = await hgFetch("/diseases/" + encodeURIComponent(name));
+          document.title = `${d.name} Awareness — HealthGuard AI`;
+
+          container.innerHTML = `
+            <div class="detail-header">
+              <span class="badge-category" style="margin-bottom: 1rem; display: inline-block;">Disease Information</span>
+              <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">${escapeHtml(d.name)}</h1>
+              <p class="text-muted">Clinical Overview & Prevention Strategies</p>
+            </div>
+
+            <div class="detail-section">
+              <h3>Symptoms</h3>
+              <div style="margin-top: 1rem;">
+                ${(d.symptoms || []).map(s => `<span class="symptom-tag">${escapeHtml(s)}</span>`).join("")}
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h3>Common Causes</h3>
+              <p class="text-secondary" style="line-height: 1.8;">${escapeHtml(d.causes || "Information not available.")}</p>
+            </div>
+
+            <div class="detail-section">
+              <h3>Prevention & Control</h3>
+              <p class="text-secondary" style="line-height: 1.8;">${escapeHtml(d.prevention || "Standard hygiene practices recommended.")}</p>
+            </div>
+
+            <div class="detail-section">
+              <h3>Treatment Protocol</h3>
+              <p class="text-secondary" style="line-height: 1.8;">${escapeHtml(d.treatment || "Consult a healthcare professional for clinical guidance.")}</p>
+            </div>
+
+            <div class="emergency-alert">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              <div>
+                <strong style="display: block; margin-bottom: 0.25rem;">Medical Emergency Warning</strong>
+                <p style="margin: 0; font-size: 0.95rem;">${escapeHtml(d.emergencyWarning || "If symptoms worsen rapidly or difficulties in breathing occur, seek immediate medical attention.")}</p>
+              </div>
+            </div>
+          `;
+        } catch (e) {
+          container.innerHTML = `
+            <div class="card" style="padding: 3rem; text-align: center;">
+              <h3 class="text-danger">Failed to load data</h3>
+              <p class="text-muted">${escapeHtml(e.message)}</p>
+              <a href="/health-awareness.html" class="btn btn-primary mt-1">Return to Library</a>
+            </div>`;
+        }
+      })();
+    </script>
+  </body>
+</html>
